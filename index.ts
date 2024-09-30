@@ -1,9 +1,8 @@
 import { Mistral } from '@mistralai/mistralai';
+import promptSync from 'prompt-sync';
 
 const apiKey = process.env.MISTRAL_API_KEY;
-
-const client = new Mistral({apiKey: apiKey});
-
+const client = new Mistral({ apiKey: apiKey });
 
 const prompt = {
     "Correcteur": "Corrigez la grammaire et la syntaxe de la phrase suivante sans ajouter de commentaire: ",
@@ -12,80 +11,67 @@ const prompt = {
     "Rédacteur": "Rédige une phrase à partir de ce qui est demandé: ",
 };
 
-
 async function main() {
+    const promptInput = promptSync();  // Initialize prompt-sync for input
     let isRunning: boolean = true;
 
     while (isRunning) {
-
         console.log("Choisissez une option: ");
         console.log("1. Correcteur");
         console.log("2. Traducteur");
         console.log("3. Résumeur");
         console.log("4. Rédacteur");
+        console.log("Tapez 'exit' pour quitter.");
 
-        const promptChoice: string | null = prompt("Choix: ");
-        if (promptChoice === "1") {
-            const userInput: string | null = prompt("Entrez une phrase: ");
-            if (userInput === "exit" || userInput === null) {
-                isRunning = false;
-                break;
-            }
-            chat(userInput, prompt.Correcteur);
-        }
-        else if (promptChoice === "2") {
-            const userInput: string | null = prompt("Entrez une phrase: ");
-            if (userInput === "exit" || userInput === null) {
-                isRunning = false;
-                break;
-            }
-            chat(userInput, prompt.Traducteur);
-        }
-        else if (promptChoice === "3") {
-            const userInput: string | null = prompt("Entrez une phrase: ");
-            if (userInput === "exit" || userInput === null) {
-                isRunning = false;
-                break;
-            }
-            chat(userInput, prompt.Résumeur);
-        }
-        else if (promptChoice === "4") {
-            const userInput: string | null = prompt("Entrez une phrase: ");
-            if (userInput === "exit" || userInput === null) {
-                isRunning = false;
-                break;
-            }
-            chat(userInput, prompt.Rédacteur);
-        } else {
+        const promptChoice = promptInput("Choix: ");
+
+        if (promptChoice === "exit") {
+            isRunning = false;
             break;
         }
-        
-        
-        
 
-        // const userInput: string | null = prompt("Enter a message: ");
-        // if (userInput === "exit" || userInput === null) {
-        //     isRunning = false;
-        //     break;
-        // }
-        
-        // chat(userInput, "You are a helpful assistant.");
-    }   
-    
-}
+        const userInput = promptInput("Entrez une phrase: ");
 
-async function chat(userInput: string, prompt: string) {
-    const chatResponse = await client.chat.complete({
-    model: 'open-mistral-nemo',
-    messages: [{role: 'user', content: userInput}],
-    });
+        if (userInput === "exit" || userInput === null) {
+            isRunning = false;
+            break;
+        }
 
-    if (chatResponse.choices) {
-    console.log('Chat:', chatResponse.choices[0].message.content);
-    } else {
-    console.error('No choices found in chat response');
+        switch (promptChoice) {
+            case "1":
+                await chat(userInput, prompt.Correcteur);
+                break;
+            case "2":
+                await chat(userInput, prompt.Traducteur);
+                break;
+            case "3":
+                await chat(userInput, prompt.Résumeur);
+                break;
+            case "4":
+                await chat(userInput, prompt.Rédacteur);
+                break;
+            default:
+                console.log("Option non valide. Veuillez réessayer.");
+                break;
+        }
     }
 }
 
+async function chat(userInput: string, promptType: string) {
+    try {
+        const chatResponse = await client.chat.complete({
+            model: 'open-mistral-nemo',
+            messages: [{ role: 'user', content: `${promptType}${userInput}` }],
+        });
+
+        if (chatResponse.choices && chatResponse.choices.length > 0) {
+            console.log('Chat:', chatResponse.choices[0].message.content);
+        } else {
+            console.error('No choices found in chat response');
+        }
+    } catch (error) {
+        console.error('Error in chat:', error);
+    }
+}
 
 main();
