@@ -1,5 +1,4 @@
 import { Mistral } from '@mistralai/mistralai';
-import promptSync from 'prompt-sync';
 
 const apiKey = process.env.MISTRAL_API_KEY;
 const client = new Mistral({ apiKey: apiKey });
@@ -12,27 +11,26 @@ const prompt = {
 };
 
 async function main() {
-    const promptInput = promptSync();  // Initialize prompt-sync for input
-    let isRunning: boolean = true;
+    let isRunning = true;
+
+    process.stdin.setEncoding('utf-8');
 
     while (isRunning) {
-        console.log("Choisissez une option: ");
+        console.log("\nChoisissez une option: ");
         console.log("1. Correcteur");
         console.log("2. Traducteur");
         console.log("3. Résumeur");
         console.log("4. Rédacteur");
         console.log("Tapez 'exit' pour quitter.");
 
-        const promptChoice = promptInput("Choix: ");
-
+        const promptChoice = await getUserInput("Choix: ");
         if (promptChoice === "exit") {
             isRunning = false;
             break;
         }
 
-        const userInput = promptInput("Entrez une phrase: ");
-
-        if (userInput === "exit" || userInput === null) {
+        const userInput = await getUserInput("Entrez une phrase: ");
+        if (userInput === "exit" || userInput === null || userInput === undefined) {
             isRunning = false;
             break;
         }
@@ -55,17 +53,26 @@ async function main() {
                 break;
         }
     }
+    process.stdin.end();
 }
 
-async function chat(userInput: string, promptType: string) {
+async function getUserInput(query: string) {
+    console.log(query);
+    return new Promise((resolve) => {
+        process.stdin.once('data', (data) => resolve(data.toString().trim()));
+    });
+}
+
+async function chat(userInput: string, promptType: string   ) {
     try {
+        console.log(`Calling mistral with <${promptType}> =${userInput}`);
         const chatResponse = await client.chat.complete({
             model: 'open-mistral-nemo',
             messages: [{ role: 'user', content: `${promptType}${userInput}` }],
         });
 
         if (chatResponse.choices && chatResponse.choices.length > 0) {
-            console.log('Chat:', chatResponse.choices[0].message.content);
+            console.log('Chat:\n', chatResponse.choices[0].message.content);
         } else {
             console.error('No choices found in chat response');
         }
