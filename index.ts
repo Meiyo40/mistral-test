@@ -29,7 +29,7 @@ async function main() {
             break;
         }
 
-        const userInput = await getUserInput("Entrez une phrase: ");
+        const userInput = await getUserInput("Entrez une phrase:");
         if (userInput === "exit" || userInput === null || userInput === undefined) {
             isRunning = false;
             break;
@@ -65,14 +65,14 @@ async function getUserInput(query: string) {
 
 async function chat(userInput: string, promptType: string   ) {
     try {
-        console.log(`Calling mistral with <${promptType}> =${userInput}`);
+        console.log(`Calling mistral with PROMPT:${promptType}\n CONTENT:${userInput}`);
         const chatResponse = await client.chat.complete({
             model: 'open-mistral-nemo',
             messages: [{ role: 'user', content: `${promptType}${userInput}` }],
         });
 
         if (chatResponse.choices && chatResponse.choices.length > 0) {
-            console.log('Chat:\n', chatResponse.choices[0].message.content);
+            console.log(`Réponse:\n${chatResponse.choices[0].message.content}\n`);
         } else {
             console.error('No choices found in chat response');
         }
