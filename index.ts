@@ -68,7 +68,10 @@ async function chat(userInput: string, promptType: string   ) {
         console.log(`Calling mistral with PROMPT:${promptType}\n CONTENT:${userInput}`);
         const chatResponse = await client.chat.complete({
             model: 'open-mistral-nemo',
-            messages: [{ role: 'user', content: `${promptType}${userInput}` }],
+            messages: [
+                { role: 'system', content: promptType },
+                { role: 'user', content: userInput }
+            ],
         });
 
         if (chatResponse.choices && chatResponse.choices.length > 0) {
